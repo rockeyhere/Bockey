@@ -1,4 +1,4 @@
 # Bockey
 Sound Installation : floating buoy phone project
 
-[https://www.google.com/](https://rockey.design/Bockey)
+[Link to project site.](https://rockey.design/Bockey)
