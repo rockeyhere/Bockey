@@ -1,3 +1,5 @@
+// Bockey: is a solar-powered buoy project installed by Rockey Ke in April, 2023
+// 20230505: This version is the first to incorporate different sleep function that allow low power interval on the Maduino board between working sessions.
 // Author: Rockey Ke
 
 #include <stdio.h>
@@ -7,7 +9,8 @@
 //include the SD library:
 #include <SPI.h>
 #include <SD.h>
-// set up variables using the SD utility library functions:
+
+// set up variables using the SD utility library 
 Sd2Card card;
 SdVolume volume;
 SdFile root;
@@ -69,12 +72,14 @@ void setup()
     Serial1.begin(115200);
     delay(100);
 
-    // if (!Serial1){
-    // Serial1.begin(115200);
-    // unsigned long now = millis();
-    //   while ((now - millis()) < 2000 && !Serial1)
-    //   {}
-    // }
+    /* Ensure/ Trouble Shooting Serial Connection
+    if (!Serial1){
+    Serial1.begin(115200);
+    unsigned long now = millis();
+      while ((now - millis()) < 2000 && !Serial1)
+      {}
+    }
+    */
 
     //Serial1.begin(UART_BAUD, SERIAL_8N1, MODEM_RXD, MODEM_TXD);
 
@@ -93,15 +98,13 @@ void setup()
     // digitalWrite(LTE_FLIGHT_PIN, HIGH);//Flight Mode
 
     //wait till Serial1 turn on
-    //////////////////////////////////////////////set parameters
-
+    
+    ///////////////////////////////////////////////////////////////////////SETTING
     //battery
     lastBattCheckTime = 0;
     battInterval = 3600000;
-
     //call
     callTimeLimit = 300000;
-
     //initializing actions
     myModuleState = true;
     goodTime = false;
@@ -110,9 +113,7 @@ void setup()
     isTexting = 0;
     lastUpdateTime = 0;
     firstConfig = 0;
-
-
-
+    
     sendText("Hello World, I'm Bockey.",rockeyNum,3000,DEBUG);
     moduleConfig();
     reportBatt();
@@ -125,7 +126,7 @@ void setup()
 
 void loop()
 {   
-    //SerialUSB.println(millis());
+    // SerialUSB.println(millis());
 
     // while (!Serial1){
     // SerialUSB.println("Serial1 not established yet.");
@@ -137,14 +138,14 @@ void loop()
 
     // //bed(); //checking if Bocky need to wake up or sleep
 
-    // //to set FIRST RTC time
-    // if(millis()<86400000 && firstTime == 0){
-    //   send_command_and_wait("AT+CCLK?", "+CCLK", 3000);
-    //   //to-do need to update rtc
-    //   firstTime = 1;
-    //   goodTime = 1;
-    //   lastUpdateTime = millis();
-    // }
+    //to set FIRST RTC time
+    if(millis()<86400000 && firstTime == 0){
+      send_command_and_wait("AT+CCLK?", "+CCLK", 3000);
+      //to-do need to update rtc
+      firstTime = 1;
+      goodTime = 1;
+      lastUpdateTime = millis();
+    }
 
     //to re-configurate module
     if (millis()-lastConfig>360000){
@@ -154,7 +155,7 @@ void loop()
     if (millis()>(lastBattCheckTime+battInterval)){
       lastBattCheckTime = millis();
       reportBatt();
-      //moduleConfig();
+      moduleConfig();
       callTimeLimit = (int(analogRead(A1)*3.3*2*10/1024+0.5)-35)*60000; //update call time limit
     }
 
@@ -165,14 +166,14 @@ void loop()
         incomingString = Serial1.readStringUntil('\n\r');
         SerialUSB.println(incomingString);
 
-                  //answer call if rinng
+         //answer call if ring
         if (incomingString.indexOf("RING") >0){
            SerialUSB.println("Call Detected");
            sendData("ATA", 3000, DEBUG);
            callStartTime = millis();
            isCalling = 1;
         }
-
+        
         if (incomingString.indexOf("SMS DONE") >0 ||incomingString.indexOf("+SMS FULL") >0){
           delay(100);
           if (!Serial1){
@@ -222,11 +223,7 @@ void loop()
         //SerialUSB.write(Serial1.read());
         incomingString = "";
         yield();
-    
-        
     }
-
-    
    
     if (isCalling == 1)
     {
@@ -264,7 +261,7 @@ void loop()
     }
 }
 
-///////////////////////////////////////////////// Functions Below
+//////////////////////////////////////////////////////////////////// Functions Below
 
 //sending Command to the Serial1
 String sendData(String command, const int timeout, boolean debug)
@@ -483,28 +480,32 @@ bool turnOffModule()
     }
 
 
-// void mcuSleep(int sleep_time_ms)
-//     {
-//         //int adjusted_sleep = pre_sleep(sleep_time_ms);
-//         if (sleep_time_ms > 0)
-//         {
-//           Serial1.flush();
-//           Serial1.end();
+/*  mcuSleep is a alternative sleep function that further lower energy usage
 
-//           LowPower.sleep(sleep_time_ms);
+    void mcuSleep(int sleep_time_ms)
+    {
+        //int adjusted_sleep = pre_sleep(sleep_time_ms);
+        if (sleep_time_ms > 0)
+        {
+          Serial1.flush();
+          Serial1.end();
 
-//           Serial1.begin(115200);
-//           unsigned long now = millis();
-//           while ((now - millis()) < 200 && !Serial1)
-//           {}
-//         }
-//     }
+          LowPower.sleep(sleep_time_ms);
 
-// void mySleep(int my_sleep_time_ms){
-//   turnOffModule();
-//   mcuSleep(my_sleep_time_ms);
-//   turnOnModule();
-// }
+          Serial1.begin(115200);
+          unsigned long now = millis();
+          while ((now - millis()) < 200 && !Serial1)
+          {}
+        }
+    }
+
+void mySleep(int my_sleep_time_ms){
+  turnOffModule();
+  mcuSleep(my_sleep_time_ms);
+  turnOnModule();
+}
+
+*/
 
 void bed(){
   
